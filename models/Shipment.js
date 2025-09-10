@@ -1,4 +1,3 @@
-// models/shipment.js
 const mongoose = require("mongoose");
 
 /* ========== Common Subdocs ========== */
