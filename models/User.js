@@ -20,9 +20,6 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index email for fast lookup (unique already adds an index).
-UserSchema.index({ email: 1 });
-
 // Hash password when it changes
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
