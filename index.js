@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
     endpoints: { health: "/health", register: "POST /auth/register", login: "POST /auth/login", me: "GET /auth/me (Bearer token required)", docs: "/docs" },
     time: new Date().toISOString(),
   });
-});
+}); 
 
  // --- SWAGGER SETUP ---
 const swaggerSpec = swaggerJsdoc({
