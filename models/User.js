@@ -10,11 +10,9 @@ const UserSchema = new mongoose.Schema(
     address:  { type: String, required: true, trim: true },
     age:      { type: Number, min: 0, max: 130 },
 
-    // Keep flexible to avoid migrations; enforce allowed values in service code if needed.
-    role:   { type: String, default: "user", trim: true },      // e.g., "user", "admin"
-    status: { type: String, default: "pending", trim: true },   // e.g., "pending","active","suspended"
+    role:   { type: String, default: "user", trim: true },      // "user", "admin"
+    status: { type: String, default: "pending", trim: true },   // "pending","active","suspended"
 
-    // Future-proofing 
     isDeleted: { type: Boolean, default: false }, // soft delete
   },
   { timestamps: true }

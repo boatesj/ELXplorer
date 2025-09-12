@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-
 const {
   createShipment,
   getAllShipments,
@@ -8,24 +7,65 @@ const {
   getOneShipment,
   getUserShipment,
   deleteShipment,
-} = require("../controllers/shipments"); // note the 's'
+  addTrackingEvent,
+  addDocument,
+  updateStatus,
+} = require("../controllers/shipments");
+const { requireAuth, requireRole } = require("../middleware/auth");
+const { handleValidation } = require("../middleware/validate");
+const {
+  validateObjectIdParam,
+  validateTrackingEvent,
+  validateDocument,
+  validateShipmentCreate,
+} = require("../utils/validators");
 
-// ADD SHIPMENT
-router.post("/", createShipment);
+// CREATE
+router.post("/", requireAuth, validateShipmentCreate, handleValidation, createShipment);
 
-// GET ALL SHIPMENTS
-router.get("/", getAllShipments);
+// LIST
+router.get("/", requireAuth, getAllShipments);
 
-// UPDATE SHIPMENT
-router.put("/:id", updateShipment);
+// READ
+router.get("/:id", requireAuth, validateObjectIdParam("id"), handleValidation, getOneShipment);
 
-// GET ONE SHIPMENT
-router.get("/find/:id", getOneShipment);
+// UPDATE
+router.put("/:id", requireAuth, validateObjectIdParam("id"), handleValidation, updateShipment);
 
-// GET USER'S SHIPMENTS
-router.post("/me", getUserShipment);
+// USER'S SHIPMENTS
+router.get("/me/list", requireAuth, getUserShipment);
 
-// DELETE SHIPMENT
-router.delete("/:id", deleteShipment);
+// DELETE
+router.delete("/:id", requireAuth, validateObjectIdParam("id"), handleValidation, deleteShipment);
+
+// Admin-only ops
+router.post(
+  "/:id/tracking",
+  requireAuth,
+  requireRole("admin"),
+  validateObjectIdParam("id"),
+  validateTrackingEvent,
+  handleValidation,
+  addTrackingEvent
+);
+
+router.post(
+  "/:id/documents",
+  requireAuth,
+  requireRole("admin"),
+  validateObjectIdParam("id"),
+  validateDocument,
+  handleValidation,
+  addDocument
+);
+
+router.patch(
+  "/:id/status",
+  requireAuth,
+  requireRole("admin"),
+  validateObjectIdParam("id"),
+  handleValidation,
+  updateStatus
+);
 
 module.exports = router;

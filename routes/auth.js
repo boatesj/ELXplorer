@@ -2,6 +2,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { registerUser, loginUser } = require("../controllers/auth");
+const { validateLogin, validateRegister } = require("../utils/validators");
+const { handleValidation } = require("../middleware/validate");
 
 const router = express.Router();
 
@@ -13,7 +15,6 @@ function requireAuth(req, res, next) {
 
   const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
   if (!secret) {
-    // Misconfiguration — better 500 than 401
     return res.status(500).json({ ok: false, message: "JWT secret not configured" });
   }
 
@@ -27,18 +28,17 @@ function requireAuth(req, res, next) {
 }
 
 /** POST /auth/register */
-router.post("/register", registerUser);
+router.post("/register", validateRegister, handleValidation, registerUser);
 
 /** POST /auth/login */
-router.post("/login", loginUser);
+router.post("/login", validateLogin, handleValidation, loginUser);
 
 /** GET /auth/me (protected) */
 router.get("/me", requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .select("-password -__v") // be explicit
+      .select("-password -__v")
       .lean();
-
     if (!user) return res.status(404).json({ ok: false, message: "User not found" });
     return res.json({ ok: true, data: user });
   } catch (err) {
