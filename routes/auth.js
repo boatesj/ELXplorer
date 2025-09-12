@@ -5,54 +5,45 @@ const { registerUser, loginUser } = require("../controllers/auth");
 
 const router = express.Router();
 
-/**
- * Simple JWT auth middleware
- * Looks for Authorization: Bearer <token>
- */
+/** JWT auth middleware */
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
-  if (!token) return res.status(401).json({ message: "Missing token" });
+  if (!token) return res.status(401).json({ ok: false, message: "Missing token" });
+
+  const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
+  if (!secret) {
+    // Misconfiguration — better 500 than 401
+    return res.status(500).json({ ok: false, message: "JWT secret not configured" });
+  }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || process.env.JWT_SEC // fallback if env name differs
-    );
-    req.user = decoded; // { id, role, iat, exp }
-    next();
+    const decoded = jwt.verify(token, secret); // { id, role, iat, exp }
+    req.user = decoded;
+    return next();
   } catch (e) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ ok: false, message: "Invalid or expired token" });
   }
 }
 
-/**
- * @route   POST /auth/register
- * @desc    Register a new user
- */
+/** POST /auth/register */
 router.post("/register", registerUser);
 
-/**
- * @route   POST /auth/login
- * @desc    Login and get JWT
- */
+/** POST /auth/login */
 router.post("/login", loginUser);
 
-/**
- * @route   GET /auth/me
- * @desc    Get current user (requires Bearer token)
- */
+/** GET /auth/me (protected) */
 router.get("/me", requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).lean();
-    if (!user) return res.status(404).json({ message: "User not found" });
-    delete user.password;
-    return res.json(user);
+    const user = await User.findById(req.user.id)
+      .select("-password -__v") // be explicit
+      .lean();
+
+    if (!user) return res.status(404).json({ ok: false, message: "User not found" });
+    return res.json({ ok: true, data: user });
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: err.message });
+    return res.status(500).json({ ok: false, message: "Server error", error: err.message });
   }
 });
 

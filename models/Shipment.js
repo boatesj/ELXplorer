@@ -70,7 +70,7 @@ const VehicleSchema = new mongoose.Schema(
 const ContainerBookingSchema = new mongoose.Schema(
   {
     containerType: { type: String, trim: true }, // "20GP","40HC","20FR","40OT", etc.
-    ownerType: { type: String, trim: true },     // "COC" (carrier owned) or "SOC" (shipper owned)
+    ownerType: { type: String, trim: true },     // "COC" or "SOC"
     containerNo: { type: String, trim: true, index: true }, // e.g., MSKU1234567
     sealNo: { type: String, trim: true },
     vgmKg: { type: Number, min: 0 },             // Verified Gross Mass
@@ -119,28 +119,24 @@ const LclSchema = new mongoose.Schema(
 );
 
 /* ========== Container Procurement (for-keep SOC) ========== */
-/** When a customer wants to BUY/own a container (SOC) and we then book that same box onto a vessel. */
 const ContainerProcurementSchema = new mongoose.Schema(
   {
-    required: { type: Boolean, default: false },     // if true, this shipment involves procurement
+    required: { type: Boolean, default: false },
     status: {
       type: String,
-      default: "not_required",                       // not_required -> sourcing -> reserved -> purchased -> released -> handed_over
+      default: "not_required", // not_required -> sourcing -> reserved -> purchased -> released -> handed_over
       trim: true,
     },
-    // what we’re sourcing
-    requestedType: { type: String, trim: true },     // e.g., "20GP","40HC"
-    grade: { type: String, trim: true },             // CW (cargo worthy), WWT, AS-IS, etc.
-    // vendor + cost
+    requestedType: { type: String, trim: true }, // e.g., "20GP","40HC"
+    grade: { type: String, trim: true },         // CW, WWT, AS-IS
     vendorName: { type: String, trim: true },
     vendorRef: { type: String, trim: true },
-    procurementPrice: Money,                         // price we pay
-    salePrice: Money,                                // price charged to customer
-    // resulting asset
-    containerNo: { type: String, trim: true, index: true }, // assigned once known
+    procurementPrice: Money,
+    salePrice: Money,
+    containerNo: { type: String, trim: true, index: true },
     conditionNotes: { type: String, trim: true },
-    releaseLocation: { type: String, trim: true },   // depot location
-    pickupBookedAt: { type: Date },                  // when pickup is scheduled
+    releaseLocation: { type: String, trim: true },
+    pickupBookedAt: { type: Date },
   },
   { _id: false }
 );
@@ -148,7 +144,6 @@ const ContainerProcurementSchema = new mongoose.Schema(
 /* ========== Main Schema ========== */
 const ShipmentSchema = new mongoose.Schema(
   {
-    // Human-friendly booking reference: ELX-YYYY-XXXX
     reference: { type: String, unique: true, index: true, trim: true },
 
     // Associations
@@ -159,18 +154,18 @@ const ShipmentSchema = new mongoose.Schema(
     // Front-door info
     bookingChannel: { type: String, enum: ["web", "admin", "agent"], default: "web" },
 
-    // Mode (auto-aligned by validation guard)
+    // Mode
     mode: { type: String, default: "RoRo", trim: true }, // "RoRo" | "Container" | "Air" (future)
 
     // Route / ports
     ports: {
-      originPort: { type: String, required: true, trim: true },       // "Southampton" / "SOU"
-      destinationPort: { type: String, required: true, trim: true },  // "Tema" / "TEM"
+      originPort: { type: String, required: true, trim: true },
+      destinationPort: { type: String, required: true, trim: true },
       originCountry: { type: String, trim: true },
       destinationCountry: { type: String, trim: true },
       inlandPickupRequired: { type: Boolean, default: false },
       pickupAddress: { type: String, trim: true },
-      dropoffReference: { type: String, trim: true }, // gate ref, appointment no, etc.
+      dropoffReference: { type: String, trim: true },
     },
 
     // Carrier & voyage
@@ -178,13 +173,13 @@ const ShipmentSchema = new mongoose.Schema(
       line: { type: String, trim: true },     // "NMT", "Grimaldi", etc.
       vesselName: { type: String, trim: true },
       voyageNo: { type: String, trim: true },
-      etd: { type: Date },                    // estimated departure
-      eta: { type: Date },                    // estimated arrival
-      atd: { type: Date },                    // actual departure
-      ata: { type: Date },                    // actual arrival
+      etd: { type: Date },
+      eta: { type: Date },
+      atd: { type: Date },
+      ata: { type: Date },
     },
 
-    // Status (string for flexibility; transitions enforced in service layer)
+    // Status
     status: {
       type: String,
       default: "quote", // quote -> booked -> gate_in -> sailed -> arrived -> released -> delivered | cancelled | on_hold
@@ -199,12 +194,12 @@ const ShipmentSchema = new mongoose.Schema(
       lcl: LclSchema,                        // LCL
     },
 
-    /* -------- Container procurement (for-keep SOC) -------- */
+    /* -------- Container procurement -------- */
     containerProcurement: ContainerProcurementSchema,
 
     // Commercials
     pricing: {
-      base: Money,                           // base ocean/service
+      base: Money,
       surcharges: { type: [SurchargeSchema], default: [] },
       insurance: Money,
       vat: Money,
@@ -225,9 +220,9 @@ const ShipmentSchema = new mongoose.Schema(
     ],
 
     // Parties
-    shipper: PartySchema,       // delivering party
-    consignee: PartySchema,     // receiver abroad
-    notifyParty: PartySchema,   // optional
+    shipper: PartySchema,
+    consignee: PartySchema,
+    notifyParty: PartySchema,
 
     // Docs & timeline
     documents: { type: [DocumentSchema], default: [] },
@@ -236,7 +231,7 @@ const ShipmentSchema = new mongoose.Schema(
     // Ops
     notes: { type: String, trim: true },
     isDeleted: { type: Boolean, default: false },
-    meta: { type: Object },     // API payloads, debug, etc.
+    meta: { type: Object },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -260,8 +255,6 @@ ShipmentSchema.index({ "cargo.container.containerNo": 1 });
 ShipmentSchema.index({ "containerProcurement.containerNo": 1 });
 
 /* ========== Guards & Helpers ========== */
-// Ensure exactly one cargo type and align mode accordingly.
-// Keep logic flexible to avoid migrations later.
 ShipmentSchema.pre("validate", function (next) {
   const present = [
     this.cargo?.vehicle ? "vehicle" : null,
@@ -273,11 +266,9 @@ ShipmentSchema.pre("validate", function (next) {
     return next(new Error("Exactly one cargo type must be provided (vehicle, container, or lcl)."));
   }
 
-  // Keep mode consistent
   if (present[0] === "vehicle") this.mode = "RoRo";
   if (present[0] === "container" || present[0] === "lcl") this.mode = "Container";
 
-  // If procurement is required, nudge ownerType to SOC on the booking
   if (this.containerProcurement?.required) {
     if (this.cargoType === "container") {
       this.cargo.container.ownerType = this.cargo.container.ownerType || "SOC";
@@ -287,7 +278,6 @@ ShipmentSchema.pre("validate", function (next) {
   next();
 });
 
-// Simple reference generator (replace with counters collection if you want true sequences)
 ShipmentSchema.pre("save", function (next) {
   if (this.reference) return next();
   const year = new Date().getFullYear();
