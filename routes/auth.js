@@ -1,93 +1,49 @@
 const express = require("express");
-const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const dotenv = require("dotenv");
+const { registerUser, loginUser } = require("../controllers/auth");
+const { validateLogin, validateRegister } = require("../utils/validators");
+const { handleValidation } = require("../middleware/validate");
 
-dotenv.config();
+const router = express.Router();
 
-/**
- * Helper to sign JWT
- */
-function signToken(user) {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,               // e.g. "supersecret"
-    { expiresIn: process.env.JWT_EXPIRES || "10d" }
-  );
+/** JWT auth middleware */
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+  if (!token) return res.status(401).json({ ok: false, message: "Missing token" });
+
+  const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
+  if (!secret) {
+    return res.status(500).json({ ok: false, message: "JWT secret not configured" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret); // { id, role, iat, exp }
+    req.user = decoded;
+    return next();
+  } catch (e) {
+    return res.status(401).json({ ok: false, message: "Invalid or expired token" });
+  }
 }
 
-/**
- * REGISTER
- * Expects: { fullname, email, password, country, address, age }
- * The User pre-save hook will hash the password with bcrypt.
- */
-router.post("/register", async (req, res) => {
+/** POST /auth/register */
+router.post("/register", validateRegister, handleValidation, registerUser);
+
+/** POST /auth/login */
+router.post("/login", validateLogin, handleValidation, loginUser);
+
+/** GET /auth/me (protected) */
+router.get("/me", requireAuth, async (req, res) => {
   try {
-    const { fullname, email, password, country, address, age } = req.body;
-
-    // Basic required checks (add Joi/Zod later)
-    if (!fullname || !email || !password || !country || !address) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    const existing = await User.findOne({ email: email.toLowerCase().trim() });
-    if (existing) {
-      return res.status(409).json({ message: "Email already registered." });
-    }
-
-    const user = await User.create({
-      fullname,
-      email,
-      password,       // plain text here; bcrypt hook will hash
-      country,
-      address,
-      age
-    });
-
-    // Hide sensitive fields
-    const { password: _pw, ...safe } = user.toObject();
-
-    // Optionally sign token on register
-    const accessToken = signToken(user);
-
-    return res.status(201).json({ ...safe, accessToken });
+    const user = await User.findById(req.user.id)
+      .select("-password -__v")
+      .lean();
+    if (!user) return res.status(404).json({ ok: false, message: "User not found" });
+    return res.json({ ok: true, data: user });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-/**
- * LOGIN
- * Expects: { email, password }
- */
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
-    }
-
-    // Need +password because it's select:false in the schema
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password");
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
-
-    const ok = await user.comparePassword(password);
-    if (!ok) {
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
-
-    const accessToken = signToken(user);
-    const { password: _pw, ...safe } = user.toObject();
-
-    return res.status(200).json({ ...safe, accessToken });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res.status(500).json({ ok: false, message: "Server error", error: err.message });
   }
 });
 
