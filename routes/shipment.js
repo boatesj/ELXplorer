@@ -10,7 +10,7 @@ const {
   addTrackingEvent,
   addDocument,
   updateStatus,
-} = require("../controllers/shipments");
+} = require("../controllers/shipment");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { handleValidation } = require("../middleware/validate");
 const {
