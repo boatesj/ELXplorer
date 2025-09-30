@@ -5,8 +5,9 @@ const User = require("../models/User");
 function signToken(user) {
   const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
   if (!secret) throw new Error("JWT secret not configured");
+
   return jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, role: user.role },  // ✅ role is now included
     secret,
     { expiresIn: process.env.JWT_EXPIRES || "10d" }
   );
