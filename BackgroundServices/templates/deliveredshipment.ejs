@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipment Update</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      min-width: 100%;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      background-color: #FAFAFA;
+      color: #222222;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .status {
+      background-color: #1E1E1E;
+      color: #fff;
+      width: fit-content;
+      padding: 10px 20px;
+      border-radius: 6px;
+      animation: blink 1s infinite;
+      margin: 20px 0;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    .email-wrapper {
+      max-width: 700px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      background-color: #fff;
+    }
+
+    .email-header {
+      background-color: #1E1E1E;
+      padding: 30px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .email-body {
+      padding: 20px;
+      background-color: #E9EB77;
+    }
+
+    .email-footer {
+      background-color: #E9EB77;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .shipment-details p {
+      margin: 4px 0;
+    }
+
+    .tracking-events {
+      margin-top: 15px;
+      padding-left: 20px;
+    }
+
+    img {
+      display: block;
+      margin: 20px auto;
+      background-color: #1E1E1E;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-header">
+      <h1>Shipment Update</h1>
+    </div>
+
+    <div class="email-body">
+      <p>Hello <%= user.fullname %>,</p>
+      <p>Your shipment has been <strong><%= status %></strong>. Here are the details:</p>
+
+      <div class="shipment-details">
+        <p><strong>Reference:</strong> <%= referenceNo %></p>
+        <p><strong>From:</strong> <%= origin %></p>
+        <p><strong>To:</strong> <%= destination %></p>
+
+        <% if (cargo && cargo.vehicle && cargo.vehicle.vin) { %>
+          <p><strong>Vehicle:</strong> <%= cargo.vehicle.make %> <%= cargo.vehicle.model %> (<%= cargo.vehicle.year %>)</p>
+          <p><strong>VIN:</strong> <%= cargo.vehicle.vin %></p>
+        <% } %>
+
+        <% if (cargo && cargo.container && cargo.container.containerNo) { %>
+          <p><strong>Container:</strong> <%= cargo.container.containerNo %> (<%= cargo.container.size %>)</p>
+          <p><strong>Seal No:</strong> <%= cargo.container.sealNo %></p>
+        <% } %>
+
+        <% if (eta) { %>
+          <p><strong>ETA:</strong> <%= eta.toDateString() %></p>
+        <% } %>
+        <% if (etd) { %>
+          <p><strong>ETD:</strong> <%= etd.toDateString() %></p>
+        <% } %>
+      </div>
+
+      <p class="status"><%= status.toUpperCase() %></p>
+
+      <% if (trackingEvents && trackingEvents.length > 0) { %>
+        <h3>Tracking Events:</h3>
+        <ul class="tracking-events">
+          <% trackingEvents.forEach(event => { %>
+            <li>
+              <strong><%= event.status %></strong> — <%= event.location %>
+              (<%= new Date(event.eventAt).toDateString() %>)
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+
+      <img src="https://res.cloudinary.com/dap91fhxh/image/upload/v1717495157/hero_r5lgvq.png"
+           alt="Ellcworth Shipping" height="250" width="500">
+
+      <p>Please ignore this email if you were not the sender or recipient of this shipment.</p>
+    </div>
+
+    <div class="email-footer">
+      <p>If you have any questions, please contact us at 
+        <a href="mailto:support@ellcworth.com">support@ellcworth.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

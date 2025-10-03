@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Ellcworth</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      min-width: 100%;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      background-color: #f9fafb;
+      color: #222;
+    }
+
+    .email-wrapper {
+      max-width: 700px;
+      margin: 30px auto;
+      border: 1px solid #e5e7eb;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .hero-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .email-body {
+      padding: 30px;
+      background-color: #ffffff;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 20px;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: #374151;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: #1e293b;
+      color: #fff;
+      padding: 14px 28px;
+      margin: 25px 0;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .cta-button:hover {
+      background-color: #0f172a;
+    }
+
+    .email-footer {
+      background-color: #0f172a;
+      color: #f9fafb;
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .email-footer a {
+      color: #facc15;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <!-- Hero Image -->
+    <img src="https://res.cloudinary.com/dzkxywpbq/image/upload/v1759491782/welcome_email_ccaikt.png" 
+         alt="Ellcworth Welcome" class="hero-image">
+
+    <div class="email-body">
+      <h1>Welcome to Ellcworth</h1>
+      <p>Hello <%= fullname %>,</p>
+      <p>Thank you for joining <strong>Ellcworth</strong>. We’re excited to support your shipping needs, whether by sea, air, or land.</p>
+      <p>To complete your registration and secure your account, please set your password using the button below:</p>
+
+      <p style="text-align:center;">
+        <a href="<%= setPasswordUrl %>" class="cta-button">Set Your Password</a>
+      </p>
+
+      <p>This link will expire in <strong>24 hours</strong> for security reasons.</p>
+      <p>If you did not register for an Ellcworth account, you may safely ignore this message.</p>
+    </div>
+
+    <div class="email-footer">
+      <p>Need help? Contact us at 
+        <a href="mailto:support@ellcworth.com">support@ellcworth.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
