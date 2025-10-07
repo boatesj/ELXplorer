@@ -1,13 +1,14 @@
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-/** Helper to sign JWT */
+/** Helper to sign JWT (for login/register) */
 function signToken(user) {
   const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
   if (!secret) throw new Error("JWT secret not configured");
 
   return jwt.sign(
-    { id: user._id, role: user.role },  // ✅ role is now included
+    { id: user._id, role: user.role },
     secret,
     { expiresIn: process.env.JWT_EXPIRES || "10d" }
   );
@@ -29,10 +30,12 @@ const registerUser = async (req, res) => {
     const user = await User.create({
       fullname: fullname.trim(),
       email: normalizedEmail,
-      password, // pre-save hook hashes
+      password, // pre-save hook hashes this
       country: country.trim(),
       address: address.trim(),
       age,
+      status: "pending",
+      welcomeMailSent: false
     });
 
     const { password: _pw, ...safe } = user.toObject();
@@ -66,4 +69,50 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+/** VERIFY RESET TOKEN */
+const requestPasswordReset = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    return res.status(200).json({ valid: true, userId: decoded.id });
+  } catch (err) {
+    return res.status(400).json({ valid: false, message: "Invalid or expired token" });
+  }
+};
+
+/** RESET PASSWORD */
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find user
+    const user = await User.findById(decoded.id).select("+password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update password (pre-save hook hashes it)
+    user.password = password;
+    user.status = "active";
+    user.welcomeMailSent = true;
+    await user.save();
+
+    return res.status(200).json({ message: "Password has been set successfully. You can now login." });
+  } catch (err) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  requestPasswordReset,
+  resetPassword,
+};
