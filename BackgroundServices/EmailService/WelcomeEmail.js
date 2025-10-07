@@ -1,6 +1,7 @@
 const ejs = require("ejs");
 const path = require("path");
 const dotenv = require("dotenv");
+const jwt = require("jsonwebtoken");
 const { dispatchMail } = require("../helpers/sendmail"); // Gmail transporter
 const User = require("../models/User");
 
@@ -17,14 +18,23 @@ const sendWelcomeMail = async () => {
     }
 
     for (let user of users) {
-      // Render welcome email
+      // Generate a secure, time-limited token (valid for 24h)
+      const token = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      // Build secure reset link
+      const setPasswordUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${token}`;
+
+      // Render welcome email with link
       const html = await ejs.renderFile(
         path.join(__dirname, "../templates/welcome.ejs"),
         {
           fullname: user.fullname,
           email: user.email,
-          // instead of sending password, use secure set-password link
-          setPasswordUrl: `https://www.ellcworth.com/set-password?token=SAMPLE_TOKEN_${user._id}`
+          setPasswordUrl
         }
       );
 
