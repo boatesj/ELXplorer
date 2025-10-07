@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema(
     status: { type: String, default: "pending", trim: true },   // "pending","active","suspended"
 
     isDeleted: { type: Boolean, default: false }, // soft delete
+    welcomeMailSent: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
@@ -21,7 +22,7 @@ const UserSchema = new mongoose.Schema(
 // Hash password when it changes
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password, 12); 
   next();
 });
 

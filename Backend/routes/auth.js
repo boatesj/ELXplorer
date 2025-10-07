@@ -1,7 +1,12 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { registerUser, loginUser } = require("../controllers/auth");
+const {
+  registerUser,
+  loginUser,
+  requestPasswordReset,
+  resetPassword,
+} = require("../controllers/auth");
 const { validateLogin, validateRegister } = require("../utils/validators");
 const { handleValidation } = require("../middleware/validate");
 
@@ -46,5 +51,11 @@ router.get("/me", requireAuth, async (req, res) => {
     return res.status(500).json({ ok: false, message: "Server error", error: err.message });
   }
 });
+
+/** GET /auth/reset-password/:token (verify token) */
+router.get("/reset-password/:token", requestPasswordReset);
+
+/** POST /auth/reset-password/:token (set new password) */
+router.post("/reset-password/:token", resetPassword);
 
 module.exports = router;
