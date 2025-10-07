@@ -1,145 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shipment Update</title>
-  <style type="text/css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivered Shipment</title>
+  <style>
     body {
       margin: 0;
       padding: 0;
-      min-width: 100%;
-      font-family: Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      background-color: #FAFAFA;
-      color: #222222;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-top: 0;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .status {
-      background-color: #1E1E1E;
-      color: #fff;
-      width: fit-content;
-      padding: 10px 20px;
-      border-radius: 6px;
-      animation: blink 1s infinite;
-      margin: 20px 0;
-    }
-
-    @keyframes blink {
-      0% { opacity: 0.4; }
-      100% { opacity: 1; }
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #f9fafb;
+      color: #1e293b;
+      line-height: 1.6;
     }
 
     .email-wrapper {
       max-width: 700px;
-      margin: 0 auto;
-      border: 1px solid #ddd;
-      background-color: #fff;
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
     }
 
     .email-header {
-      background-color: #1E1E1E;
-      padding: 30px;
+      background: linear-gradient(90deg, #1e3a8a, #0f766e);
       color: #fff;
       text-align: center;
+      padding: 28px 20px;
+    }
+
+    .email-header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
 
     .email-body {
-      padding: 20px;
-      background-color: #E9EB77;
+      padding: 30px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #0f172a;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #0d9488;
+      display: inline-block;
+    }
+
+    p {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    .shipment-details {
+      background: #f8fafc;
+      border-left: 4px solid #0d9488;
+      padding: 16px 20px;
+      border-radius: 6px;
+      margin-top: 15px;
+      margin-bottom: 25px;
+    }
+
+    .status {
+      display: inline-block;
+      background: #0d9488;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin: 25px 0;
     }
 
     .email-footer {
-      background-color: #E9EB77;
-      padding: 20px;
+      background: #0f172a;
+      color: #f9fafb;
       text-align: center;
+      padding: 20px;
       font-size: 14px;
     }
 
-    .shipment-details p {
-      margin: 4px 0;
-    }
-
-    .tracking-events {
-      margin-top: 15px;
-      padding-left: 20px;
+    .email-footer a {
+      color: #facc15;
+      text-decoration: none;
+      font-weight: 500;
     }
 
     img {
       display: block;
-      margin: 20px auto;
-      background-color: #1E1E1E;
-      padding: 10px;
-      border-radius: 8px;
+      width: 100%;
+      height: auto;
+      margin: 25px 0;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
   <div class="email-wrapper">
     <div class="email-header">
-      <h1>Shipment Update</h1>
+      <h1>Shipment Successfully Delivered</h1>
     </div>
 
     <div class="email-body">
-      <p>Hello <%= user.fullname %>,</p>
-      <p>Your shipment has been <strong><%= status %></strong>. Here are the details:</p>
+      <p>Hello <strong><%= consignee.name || "Valued Customer" %></strong>,</p>
+      <p>
+        We are pleased to inform you that your shipment 
+        <strong><%= referenceNo %></strong> has been 
+        <span class="status">DELIVERED</span> successfully.
+      </p>
 
       <div class="shipment-details">
-        <p><strong>Reference:</strong> <%= referenceNo %></p>
-        <p><strong>From:</strong> <%= origin %></p>
-        <p><strong>To:</strong> <%= destination %></p>
-
-        <% if (cargo && cargo.vehicle && cargo.vehicle.vin) { %>
-          <p><strong>Vehicle:</strong> <%= cargo.vehicle.make %> <%= cargo.vehicle.model %> (<%= cargo.vehicle.year %>)</p>
-          <p><strong>VIN:</strong> <%= cargo.vehicle.vin %></p>
-        <% } %>
-
-        <% if (cargo && cargo.container && cargo.container.containerNo) { %>
-          <p><strong>Container:</strong> <%= cargo.container.containerNo %> (<%= cargo.container.size %>)</p>
-          <p><strong>Seal No:</strong> <%= cargo.container.sealNo %></p>
-        <% } %>
-
-        <% if (eta) { %>
-          <p><strong>ETA:</strong> <%= eta.toDateString() %></p>
-        <% } %>
-        <% if (etd) { %>
-          <p><strong>ETD:</strong> <%= etd.toDateString() %></p>
-        <% } %>
+        <h2>Delivery Summary</h2>
+        <p><strong>Reference No:</strong> <%= referenceNo %></p>
+        <p><strong>Delivered To:</strong> <%= consignee.name %></p>
+        <p><strong>Arrival Port:</strong> <%= ports.destinationPort || "N/A" %></p>
+        <p><strong>Date of Delivery:</strong> <%= eta %></p>
       </div>
 
-      <p class="status"><%= status.toUpperCase() %></p>
+      <div class="shipment-details">
+        <h2>Shipper / Exporter</h2>
+        <p><strong>Name:</strong> <%= shipper.name %></p>
+        <p><strong>Address:</strong> <%= shipper.address %></p>
+        <p><strong>Phone:</strong> <%= shipper.phone || "N/A" %></p>
+        <p><strong>Email:</strong> <%= shipper.email || "N/A" %></p>
+      </div>
 
-      <% if (trackingEvents && trackingEvents.length > 0) { %>
-        <h3>Tracking Events:</h3>
-        <ul class="tracking-events">
-          <% trackingEvents.forEach(event => { %>
-            <li>
-              <strong><%= event.status %></strong> — <%= event.location %>
-              (<%= new Date(event.eventAt).toDateString() %>)
-            </li>
-          <% }) %>
-        </ul>
+      <div class="shipment-details">
+        <h2>Consignee</h2>
+        <p><strong>Name:</strong> <%= consignee.name %></p>
+        <p><strong>Address:</strong> <%= consignee.address %></p>
+        <p><strong>Phone:</strong> <%= consignee.phone || "N/A" %></p>
+        <p><strong>Email:</strong> <%= consignee.email || "N/A" %></p>
+      </div>
+
+      <% if (notify && notify.name) { %>
+      <div class="shipment-details">
+        <h2>Notify Party</h2>
+        <p><strong>Name:</strong> <%= notify.name %></p>
+        <p><strong>Address:</strong> <%= notify.address || "N/A" %></p>
+        <p><strong>Phone:</strong> <%= notify.phone || "N/A" %></p>
+        <p><strong>Email:</strong> <%= notify.email || "N/A" %></p>
+      </div>
       <% } %>
 
-      <img src="https://res.cloudinary.com/dap91fhxh/image/upload/v1717495157/hero_r5lgvq.png"
-           alt="Ellcworth Shipping" height="250" width="500">
+      <% if (vessel && vessel.name) { %>
+      <div class="shipment-details">
+        <h2>Vessel Information</h2>
+        <p><strong>Vessel:</strong> <%= vessel.name %></p>
+        <p><strong>Voyage:</strong> <%= vessel.voyage || "N/A" %></p>
+      </div>
+      <% } %>
 
-      <p>Please ignore this email if you were not the sender or recipient of this shipment.</p>
+      <% if (cargo && cargo.vehicle && cargo.vehicle.make) { %>
+      <div class="shipment-details">
+        <h2>Goods / Vehicle Details</h2>
+        <p><strong>Make:</strong> <%= cargo.vehicle.make %></p>
+        <p><strong>Model:</strong> <%= cargo.vehicle.model %></p>
+        <p><strong>Year:</strong> <%= cargo.vehicle.year %></p>
+        <p><strong>VIN:</strong> <%= cargo.vehicle.vin %></p>
+      </div>
+      <% } %>
+
+      <img
+        src="https://res.cloudinary.com/dzkxywpbq/image/upload/v1759491782/welcome_email_ccaikt.png"
+        alt="Ellcworth Logistics"
+      />
+
+      <p>
+        Thank you for choosing <strong>Ellcworth Logistics</strong>.<br>
+        We appreciate your trust and look forward to serving you again.
+      </p>
     </div>
 
     <div class="email-footer">
-      <p>If you have any questions, please contact us at 
+      <p>
+        Need assistance? Contact our team at 
         <a href="mailto:support@ellcworth.com">support@ellcworth.com</a>
       </p>
+      <p>© <%= new Date().getFullYear() %> Ellcworth Logistics. All rights reserved.</p>
     </div>
   </div>
 </body>
